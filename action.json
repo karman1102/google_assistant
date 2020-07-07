@@ -1,0 +1,44 @@
+{
+  "actions": [
+    {
+      "description": "Default Welcome Intent",
+      "name": "MAIN",
+      "fulfillment": {
+        "conversationName": "welcome"
+      },
+      "intent": {
+        "name": "actions.intent.MAIN",
+        "trigger": {
+          "queryPatterns": [
+            "talk to Karman Rasa"
+          ]
+        }
+      }
+    },
+    {
+      "description": "Rasa Intent",
+      "name": "TEXT",
+      "fulfillment": {
+        "conversationName": "rasa_intent"
+      },
+      "intent": {
+        "name": "actions.intent.TEXT",
+        "trigger": {
+          "queryPatterns": []
+        }
+      }
+    }
+  ],
+  "conversations": {
+    "welcome": {
+      "name": "welcome",
+      "url": "https://ef35938639b8.ngrok.io/webhooks/google_assistant/webhook",
+      "fulfillmentApiVersion": 2
+    },
+    "rasa_intent": {
+      "name": "rasa_intent",
+      "url": "https://ef35938639b8.ngrok.io/webhooks/google_assistant/webhook",
+      "fulfillmentApiVersion": 2
+    }
+  }
+}
