@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 def parse_message(output=None, payload=None):
     richInitialPrompt = payload['expectedInputs'][0]['inputPrompt']['richInitialPrompt']
     value = payload['expectedInputs'][0]['inputPrompt']['richInitialPrompt']['items']
+    print("IN PARSE ", output)
     for i in range(len(output)):
+        print(output[i])
         if "text" in output[i]:
             # text responses passed as utter messages or under 'text' in domain file
             message = output[i]['text']
@@ -23,12 +25,13 @@ def parse_message(output=None, payload=None):
         elif "custom" in output[i]:
             r = output[i]['custom']
             # handles all custom output (e.g json messages)
-            if r['expectedInputs'][0]['possibleIntents'][0]['intent'] != 'actions.intent.TEXT':
-                return output[i]['custom']
-
             if "suggestions" in r:
                 richInitialPrompt['suggestions'] = r['suggestions']
-                richInitialPrompt['linkOutSuggestion'] = r['linkOutSuggestion']
+                if 'linkOutSuggestion' in r:
+                    richInitialPrompt['linkOutSuggestion'] = r['linkOutSuggestion']
+
+            elif r['expectedInputs'][0]['possibleIntents'][0]['intent'] != 'actions.intent.TEXT':
+                return output[i]['custom']
 
             else:
                 value.append(r)
@@ -87,9 +90,14 @@ class GoogleAssistant(InputChannel):
             print("PAYLOAD : ", payload)
 
             if intent == 'actions.intent.MAIN':
-                message = "Hello! Welcome to the Rasa-powered Google Assistant skill. You can start by saying hi."
-                item = {"simpleResponse": {"textToSpeech": message}}
-                value.append(item)
+                # message = "Hello! Welcome to the Rasa-powered Google Assistant skill. You can start by saying hi."
+                # item = {"simpleResponse": {"textToSpeech": message}}
+                # value.append(item)
+                message = "Hello"
+                await on_new_message(UserMessage(message, out, input_channel='GoogleAssistant', sender_id=convId))
+                output = out.messages
+                print(output)
+                template = parse_message(output=output, payload=template)
             #     helper intents payload receive
             elif intent != 'actions.intent.TEXT':
                 if intent == 'actions.intent.OPTION':
