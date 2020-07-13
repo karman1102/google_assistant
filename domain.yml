@@ -7,15 +7,20 @@ intents:
   - mood_unhappy
   - bot_challenge
   - test
+  - feedback
+  - report
 
 forms:
   - form_json
 actions:
   - action_test
   - action_confirm
+  - action_report
+  - action_greet
+  - action_fetch
 responses:
   utter_greet:
-  - text: "Hey! How are you?"
+  - text: "Hello! My name is GovBot. I will help you to easily report civic complaints in your neighbourhood to the relevant authorities in real-time."
 
   utter_cheer_up:
   - text: "Here is something to cheer you up:"

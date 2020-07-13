@@ -1,8 +1,7 @@
 ## happy path
 * greet
   - utter_greet
-* mood_great
-  - utter_happy
+  - action_greet
 
 ## sad path 1
 * greet
@@ -37,3 +36,7 @@
   - form_json
   - form{"name": "form_json"}
   - form{"name": null}
+
+## report path
+* report
+  - action_report

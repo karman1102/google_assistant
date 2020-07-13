@@ -181,7 +181,7 @@ class ActionHelloWorld(Action):
                 }
             ]
         }
-        dispatcher.utter_message(json_message=r3)
+        dispatcher.utter_message(json_message=r4)
         return []
 
 
@@ -216,8 +216,82 @@ class ActionForm(FormAction):
         print(channel)
         print(load)
         if load:
-            message = "Json has been received"
+            message = "Please provide details on the issue that you are facing."
         else:
             message = "shit"
         dispatcher.utter_message(text=message)
         return []
+
+
+class ActionGreet(Action):
+
+    def name(self) -> Text:
+        return "action_greet"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        dispatcher.utter_message("What would you like to do today?")
+        r2 = {
+            "suggestions": [
+                {
+                    "title": "Report an issue"
+                },
+                {
+                    "title": "Submit feedback"
+                },
+            ]
+        }
+        dispatcher.utter_message(json_message=r2)
+        return []
+
+
+from rasa_sdk.events import FollowupAction
+
+
+class ActionReport(Action):
+
+    def name(self) -> Text:
+        return "action_report"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        load = tracker.get_slot('json')
+        if load:
+            dispatcher.utter_message('By reporting through Civilcops, you agree to our terms of use.')
+        else:
+            return [FollowupAction('action_fetch')]
+        return []
+
+
+class ActionRetrieve(Action):
+
+    def name(self) -> Text:
+        return "action_fetch"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        r3 = {
+            "expectUserResponse": 'true',
+            "expectedInputs": [
+                {
+                    "possibleIntents": [
+                        {
+                            "intent": "actions.intent.PERMISSION",
+                            "inputValueData": {
+                                "@type": "type.googleapis.com/google.actions.v2.PermissionValueSpec",
+                                "optContext": "To address you by your name and location",
+                                "permissions": [
+                                    "NAME",
+                                    "DEVICE_PRECISE_LOCATION"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+        dispatcher.utter_message(json_message=r3)
+        return [FollowupAction('form_json')]

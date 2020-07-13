@@ -55,9 +55,21 @@
 - am I talking to a bot?
 - am I talking to a human?
 
-## intent: test
+## intent:test
 - test
 - test
 - test me
 - test this
 - test you
+
+## intent:report
+- report an issue
+- report an issue near me 
+- report
+- complaint
+
+## intent:feedback
+- submit feedback
+- give suggestion
+- feedback
+- feedback form
