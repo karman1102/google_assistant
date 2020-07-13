@@ -8,8 +8,11 @@ intents:
   - bot_challenge
   - test
 
+forms:
+  - form_json
 actions:
   - action_test
+  - action_confirm
 responses:
   utter_greet:
   - text: "Hey! How are you?"
@@ -33,3 +36,7 @@ responses:
 session_config:
   session_expiration_time: 60
   carry_over_slots_to_new_session: true
+
+slots:
+  json:
+    type: unfeaturized

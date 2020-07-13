@@ -11,6 +11,36 @@ from rasa.core.channels.channel import CollectingOutputChannel
 logger = logging.getLogger(__name__)
 
 
+def parse_message(output=None, payload=None):
+    richInitialPrompt = payload['expectedInputs'][0]['inputPrompt']['richInitialPrompt']
+    value = payload['expectedInputs'][0]['inputPrompt']['richInitialPrompt']['items']
+    for i in range(len(output)):
+        if "text" in output[i]:
+            # text responses passed as utter messages or under 'text' in domain file
+            message = output[i]['text']
+            item = {"simpleResponse": {"textToSpeech": message}}
+            value.append(item)
+        elif "custom" in output[i]:
+            r = output[i]['custom']
+            # handles all custom output (e.g json messages)
+            if r['expectedInputs'][0]['possibleIntents'][0]['intent'] != 'actions.intent.TEXT':
+                return output[i]['custom']
+
+            if "suggestions" in r:
+                richInitialPrompt['suggestions'] = r['suggestions']
+                richInitialPrompt['linkOutSuggestion'] = r['linkOutSuggestion']
+
+            else:
+                value.append(r)
+        elif "image" in output[i]:
+            # for all messages under 'images' in domain file
+            image_url = output[i]['image']
+            value.append({"basicCard": {
+                "image": {"url": image_url, "accessibilityText": "Image alternate text"},
+                "imageDisplayOptions": "CROPPED"}})
+    return payload
+
+
 class GoogleAssistant(InputChannel):
     # inherits rasa core InputChannel
     @classmethod
@@ -31,11 +61,11 @@ class GoogleAssistant(InputChannel):
 
         @google_webhook.route("/webhook", methods=['POST'])
         async def receive(request):
+            out = CollectingOutputChannel()
             payload = request.json
-            print(payload)
+            convId = payload['conversation']['conversationId']
             intent = payload['inputs'][0]['intent']
             text = payload['inputs'][0]['rawInputs'][0]['query']
-
             template = {
                 "expectUserResponse": 'true',
                 "expectedInputs": [
@@ -54,32 +84,33 @@ class GoogleAssistant(InputChannel):
                 ]
             }
             value = template['expectedInputs'][0]['inputPrompt']['richInitialPrompt']['items']
+            print("PAYLOAD : ", payload)
+
             if intent == 'actions.intent.MAIN':
                 message = "Hello! Welcome to the Rasa-powered Google Assistant skill. You can start by saying hi."
                 item = {"simpleResponse": {"textToSpeech": message}}
                 value.append(item)
+            #     helper intents payload receive
+            elif intent != 'actions.intent.TEXT':
+                if intent == 'actions.intent.OPTION':
+                    await on_new_message(UserMessage(text, out, input_channel='GoogleAssistant', sender_id=convId))
+                    output = out.messages
+                    template = parse_message(output=output, payload=template)
+                elif intent == 'actions.intent.PERMISSION':
+                    data = json.dumps(payload)
+                    await on_new_message(UserMessage(data, out, input_channel='GoogleAssistant', sender_id=convId))
+                    output = out.messages
+                    template = parse_message(output=output, payload=template)
+                else:
+                    message = "option payload, configure for this intent"
+                    item = {"simpleResponse": {"textToSpeech": message}}
+                    value.append(item)
             else:
-                out = CollectingOutputChannel()
-                await on_new_message(UserMessage(text, out))
+                await on_new_message(UserMessage(text, out, input_channel='GoogleAssistant', sender_id=convId))
                 output = out.messages
-                print(output)
-                for i in range(len(output)):
-                    if "text" in output[i]:
-                        # text responses passed as utter messages or under 'text' in domain file
-                        message = output[i]['text']
-                        item = {"simpleResponse": {"textToSpeech": message}}
-                        value.append(item)
-                    elif "custom" in output[i]:
-                        # handles all custom output (e.g json messages)
-                        r = output[i]['custom']
-                        value.append(r)
-                    elif "image" in output[i]:
-                        # for all messages under 'images' in domain file
-                        image_url = output[i]['image']
-                        value.append({"basicCard": {
-                            "image": {"url": image_url, "accessibilityText": "Image alternate text"},
-                            "imageDisplayOptions": "CROPPED"}})
+                template = parse_message(output=output, payload=template)
 
+            print("TEMPLATE : ", template)
             return response.json(template)
 
         return google_webhook

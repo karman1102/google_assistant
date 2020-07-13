@@ -24,6 +24,7 @@
 
 ## say goodbye
 * goodbye
+  - action_confirm
   - utter_goodbye
 
 ## bot challenge
@@ -33,3 +34,6 @@
 ## test path
 * test
   - action_test
+  - form_json
+  - form{"name": "form_json"}
+  - form{"name": null}
