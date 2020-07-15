@@ -11,39 +11,6 @@ from rasa.core.channels.channel import CollectingOutputChannel
 logger = logging.getLogger(__name__)
 
 
-def parse_message(output=None, payload=None):
-    richInitialPrompt = payload['expectedInputs'][0]['inputPrompt']['richInitialPrompt']
-    value = payload['expectedInputs'][0]['inputPrompt']['richInitialPrompt']['items']
-    print("IN PARSE ", output)
-    for i in range(len(output)):
-        print(output[i])
-        if "text" in output[i]:
-            # text responses passed as utter messages or under 'text' in domain file
-            message = output[i]['text']
-            item = {"simpleResponse": {"textToSpeech": message}}
-            value.append(item)
-        elif "custom" in output[i]:
-            r = output[i]['custom']
-            # handles all custom output (e.g json messages)
-            if "suggestions" in r:
-                richInitialPrompt['suggestions'] = r['suggestions']
-                if 'linkOutSuggestion' in r:
-                    richInitialPrompt['linkOutSuggestion'] = r['linkOutSuggestion']
-
-            elif r['expectedInputs'][0]['possibleIntents'][0]['intent'] != 'actions.intent.TEXT':
-                return output[i]['custom']
-
-            else:
-                value.append(r)
-        elif "image" in output[i]:
-            # for all messages under 'images' in domain file
-            image_url = output[i]['image']
-            value.append({"basicCard": {
-                "image": {"url": image_url, "accessibilityText": "Image alternate text"},
-                "imageDisplayOptions": "CROPPED"}})
-    return payload
-
-
 class GoogleAssistant(InputChannel):
     # inherits rasa core InputChannel
     @classmethod
@@ -61,6 +28,38 @@ class GoogleAssistant(InputChannel):
 
         # implementation of a health route - it will receive GET requests sent by Google Assistant and will return
         # 200 OK message confirming that the connection works well.
+
+        def parse_message(output=None, payload=None):
+            richInitialPrompt = payload['expectedInputs'][0]['inputPrompt']['richInitialPrompt']
+            value = payload['expectedInputs'][0]['inputPrompt']['richInitialPrompt']['items']
+            print("IN PARSE ", output)
+            for i in range(len(output)):
+                print(output[i])
+                if "text" in output[i]:
+                    # text responses passed as utter messages or under 'text' in domain file
+                    message = output[i]['text']
+                    item = {"simpleResponse": {"textToSpeech": message}}
+                    value.append(item)
+                elif "custom" in output[i]:
+                    r = output[i]['custom']
+                    # handles all custom output (e.g json messages)
+                    if "suggestions" in r:
+                        richInitialPrompt['suggestions'] = r['suggestions']
+                        if 'linkOutSuggestion' in r:
+                            richInitialPrompt['linkOutSuggestion'] = r['linkOutSuggestion']
+
+                    if 'expectedInputs' in r:
+                        return output[i]['custom']
+
+                    else:
+                        value.append(r)
+                elif "image" in output[i]:
+                    # for all messages under 'images' in domain file
+                    image_url = output[i]['image']
+                    value.append({"basicCard": {
+                        "image": {"url": image_url, "accessibilityText": "Image alternate text"},
+                        "imageDisplayOptions": "CROPPED"}})
+            return payload
 
         @google_webhook.route("/webhook", methods=['POST'])
         async def receive(request):
