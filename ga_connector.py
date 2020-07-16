@@ -43,14 +43,12 @@ class GoogleAssistant(InputChannel):
                 elif "custom" in output[i]:
                     r = output[i]['custom']
                     # handles all custom output (e.g json messages)
-                    if "suggestions" in r:
+                    if 'expectedInputs' in r:
+                        return output[i]['custom']
+                    elif "suggestions" in r:
                         richInitialPrompt['suggestions'] = r['suggestions']
                         if 'linkOutSuggestion' in r:
                             richInitialPrompt['linkOutSuggestion'] = r['linkOutSuggestion']
-
-                    if 'expectedInputs' in r:
-                        return output[i]['custom']
-
                     else:
                         value.append(r)
                 elif "image" in output[i]:
