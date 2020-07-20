@@ -14,6 +14,7 @@ While writing actions here, there are a few points to remember:
 - Not more than two text responses can occur together
 - NOTE : 'Suggestion Chips' require a separate payload/json response DO NOT send it in same response
         Payload for suggestion chips is same as title 
+        BASIC CARD always needs a text before the image to be displayed
         
 '''
 
@@ -231,18 +232,40 @@ class ActionGreet(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message("What would you like to do today?")
-        r2 = {
-            "suggestions": [
-                {
-                    "title": "Report an issue"
-                },
-                {
-                    "title": "Submit feedback"
-                },
-            ]
+        # dispatcher.utter_message("What would you like to do today?")
+        msg_for_previous_booking = {
+            "carouselBrowse": {
+                "items": [
+                    {
+                        "description": "Appointment Details",
+                        "footer": "Appointment ID: #CLD123",
+                        "image": {
+                            "accessibilityText": "appointment text",
+                            "url": "https://civilcops-assets.nyc3.digitaloceanspaces.com/cleardekho/app.jpg"
+                        },
+                        "openUrlAction": {
+                            "url": "https://civilcops-assets.nyc3.digitaloceanspaces.com/cleardekho/invoice.pdf"
+                        },
+                        "title": "Appointment Details"
+                    },
+                    {
+                        "description": "Appointment Details",
+                        "footer": "Appointment ID: #CLD321",
+                        "image": {
+                            "accessibilityText": "Image alternate text",
+                            "url": "https://civilcops-assets.nyc3.digitaloceanspaces.com/cleardekho/app.jpg"
+                        },
+                        "openUrlAction": {
+                            "url": "https://civilcops-assets.nyc3.digitaloceanspaces.com/cleardekho/invoice.pdf"
+                        },
+                        "title": "Appointment Details"
+                    }
+                ]
+            }
         }
-        dispatcher.utter_message(json_message=r2)
+        dispatcher.utter_message(text="Please select one of the following")
+        dispatcher.utter_message(json_message=msg_for_previous_booking)
+        # dispatcher.utter_message(image="https://i.imgur.com/nGF1K8f.jpg")
         return []
 
 
